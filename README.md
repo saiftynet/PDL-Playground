@@ -1,7 +1,7 @@
 # The PDL-Playground
 
-A simple GUI Interface to play with PDL.  A work in progress, this tool has placeholders
-for future expansion, and the eventual functinailty is not yet fuly defined
+Thi application is merely a simple graphical shell to PDL. A work in progress, this tool has placeholders
+for future expansion, and the eventual functionality is not yet fuly defined. 
 
 ### Objectives
 
@@ -15,11 +15,12 @@ A tool to explore PDL structures
 * Create scripts that can process these data structures
 * Integrated help to learn PDL
 * Data analysis and transformations
-* Create applications that can use PDL
+* Once a workflow has been created, this workflow may be applied to multiple data sources
+* With a series of domain specific scripts, one can then create custom applications with quick access to PDL processing.
 
 ### How it works
 
-This tool uses GUIDeFATE, and the auto-generates most of the UI specific callbacks.
+This tool uses [GUIDeFATE](https://github.com/saiftynet/GUIDeFATE), and the auto-generates most of the UI specific callbacks.  GUIDeFATE itself has limitted capabilities, but has been used to just get something going quickly, portably across many potential test platforms. A windows specific version will be available at [JustWin32](https://github.com/saiftynet/JustWin32).
 
 The user can execute commands a line at a time.  The lines are copied into a "History" buffer.
 They are also parsed and executed. The application has an internal hashref ($ndArrays) to stored user created
@@ -30,6 +31,6 @@ data structures.  Variables are created e.g. by:
 The variable name $x is extracted and replaced with $ndArrays{x};
 
 `parseInput()` parses the inputs identifying whether the user wants to create a ndarray, perform an operation,
-output the data, produce a chart etc.
+output the data, produce a chart etc. 
 
 
