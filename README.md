@@ -1,10 +1,15 @@
-the # PDL-Playground
-A simple GUI Interface to play with PDL
+# The PDL-Playground
+
+A simple GUI Interface to play with PDL.  A work in progress, this tool has placeholders
+for future expansion, and the eventual functinailty is not yet fuly defined
 
 ### Objectives
+
 A tool to explore PDL structures
 
 ![PDL Playground](https://github.com/saiftynet/PDL-Playground/assets/34284663/b30d057a-e0cb-40b3-9342-316644c14965)
+
+### What it might do
 
 * Create, manipulate and view ndarrays
 * Create scripts that can process these data structures
