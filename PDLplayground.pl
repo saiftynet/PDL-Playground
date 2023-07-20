@@ -58,14 +58,22 @@ END
 my $ndArrays={};
 my $script;
 my $stack=[];
-
+my %help;
+my %views=(
+    Output=>"",
+    Stack =>"",
+    Variables =>"",
+    Subroutines=>"",
+);
+my %examples;
+my $mode;
 #
 
 
 my $assist=$ARGV[1]?$ARGV[1]:"a";
 my $gui=GUIDeFATE->new($window,"gtk",$assist);
 my $frame=$gui->getFrame||$gui;
-my $nums = pdl [2, 4, 7];
+
 $frame->setValue("TextCtrl13",'');
 $frame->setValue("TextCtrl15",'');
 
@@ -77,26 +85,28 @@ sub parseInput{
     my $inStr=$frame->getValue("textctrl9");
 	$frame->appendValue("TextCtrl13","\n".$frame->getValue("textctrl9"));
     $inStr=trim($inStr);
-    print $inStr,"\n";;
-    if ($inStr=~/^\$([a-z][a-zA-Z0-9_]?)\s?=(.*)$/){
+    print $inStr,"\n";
+    if ($inStr=~/^#/){
+		# comment line...do nothing
+	}
+    elsif ($inStr=~/^\$([a-z][a-zA-Z0-9_]?)\s?=(.*)$/){
 		$ndArrays->{$1}=evaluate($2);
-		print "\n# Variable \$".$1." has been set to $ndArrays->{$1}";	 
+		print "\n# Variable \$".$1." has been set to $ndArrays->{$1}\n";	 
 	}
     elsif ($inStr=~/^print\s+\$([a-z][a-zA-Z0-9_]?)$/){	 
-	    $frame->appendValue("TextCtrl15",	
-		"\n\$".$1. " is ".$ndArrays->{$1});
+	    setView("append","Output","\n\$".$1. " is ".$ndArrays->{$1});
+	}
+    elsif ($inStr=~/^print\s+/){	 
+		$inStr=~s/print\s?//;
+	    setView("append","Output","\n$inStr   is ".evaluate($inStr));
 	}
     elsif ($inStr=~/\$([a-z][a-zA-Z0-9_]?)/){
-		while  ($inStr=~/\$([a-z][a-zA-Z0-9_]?)/){
-			$inStr=~s/\$([a-z][a-zA-Z0-9_]?)/#ndArrays->{$1}/;
-		};
-		$inStr=~s/#/\$/g;
+		evaluate($inStr);
 		print $inStr,"\n";
-		eval "$inStr";
 	}
 	else{
 		my $outStr=eval($inStr);	 
-		$frame->appendValue("TextCtrl15","\n$outStr");	 
+		setView("append","Output","\n$outStr");	 
 		
 	}
     $frame->setValue("textctrl9","");
@@ -118,6 +128,70 @@ sub trim{
 	$in=~s/^\s+|\s+$//g;
 	return $in;
 }
+
+
+# multipurpose load to load data, help file, scripts,examples
+sub load{
+	my $dataType=shift;
+}
+
+# the multipurpose output box displays many outputs
+# Help, Example search and and the variews views of the 
+# user defined data/subroutines, the stack and out of operations
+
+sub setView{
+	my ($mode,$op,$content)=@_;
+	if ($mode eq "clear"){
+		$views{$op}="";
+	}
+	elsif ($mode eq "set"){
+		$views{$op}=$content
+	}
+	elsif ($mode eq "append"){
+		$views{$op}.=$content
+	}
+	showView($op);
+}
+
+sub showView{
+	my $op=shift;
+	if (exists $views{$op}){
+		$frame->setLabel("stattext11",$op);
+		$frame->setValue("TextCtrl15",$views{$op});
+	}
+	else{
+		print "No output type $op found"
+	}
+}
+
+sub help{  # obtained by trihggering "Help"
+	my $subject=$frame->getValue("textctrl9")//"Help Index";
+	$frame->setLabel("stattext11","Help");
+	my $helpMessage="No Help Found";
+    if (exists $help{subject}){
+		$helpMessage=$help{$subject}
+	}
+	else{
+		 #searchHelp routine
+	}
+	$frame->setValue("TextCtrl15",$helpMessage)
+	
+}
+
+sub example{  # obtained by trihggering "Help"
+	my $subject=$frame->getValue("textctrl9")//"Example Index";
+	$frame->setLabel("stattext11","Example");
+	my $egText="No Example Found";
+    if (exists $examples{subject}){
+		$egText=$help{$subject}
+	}
+	else{
+		 #searchHelp routine
+	}
+	$frame->setValue("TextCtrl15",$egText)
+	
+}
+
 
 #Static text 'PDL Playground'  with id stattext0
 sub btn1 {#called using button with label Clear 
@@ -145,11 +219,11 @@ sub btn5 {#called using button with label Run
    };
 
 sub btn6 {#called using button with label Help 
-  # subroutione code goes here
+  help();
    };
 
 sub btn7 {#called using button with label Example 
-  # subroutione code goes here
+  example();
    };
 
 sub btn8 {#called using button with label Submit 
