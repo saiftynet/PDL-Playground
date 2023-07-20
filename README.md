@@ -38,3 +38,5 @@ output the data, produce a chart etc.
 Commands are entered in the "input" box. They are processed and copied into the "history" box, allowing you the build up a list of instructions passed for future modification, and conversion to scripts.  the results of any putputs (e.g. print statements) are displayed in the multi-purpose output box.
 
 The Multipurpose OutPut box is also where help messagesn and example scripts may appear. 
+
+Gnuplot outputs appear in a Gnuplot window, when invoked with commands like `imag` and `points`
