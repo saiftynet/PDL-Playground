@@ -33,4 +33,8 @@ The variable name $x is extracted and replaced with $ndArrays{x};
 `parseInput()` parses the inputs identifying whether the user wants to create a ndarray, perform an operation,
 output the data, produce a chart etc. 
 
+### UI
 
+Commands are entered in the "input" box. They are processed and copied into the "history" box, allowing you the build up a list of instructions passed for future modification, and conversion to scripts.  the results of any putputs (e.g. print statements) are displayed in the multi-purpose output box.
+
+The Multipurpose OutPut box is also where help messagesn and example scripts may appear. 
