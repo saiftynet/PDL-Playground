@@ -1,43 +1,37 @@
 #!/usr/bin/env perl 
-#A test script that creates a minimalist image magick
-#uses GUIDeFATE (which in turn depends on Wx, Tk or Gtk)
-#uses Image Magick https://xkcd.com/979/
+#A test script that gives a graphical interface to PDL
 
 use strict;
 use warnings;
 use lib "../lib/";
 use GUIDeFATE;
-use Image::Magick;
+use PDL;
+use PDL::Graphics::Simple;
 use File::Copy;
 
-my %IMCommands;
-open my $in, '<', "IMCommands.hsh" or die $!;
-{   local $/;   
-    %IMCommands = eval <$in>;
-}
-close $in;
-
-my $menuString=makeGFMenu(17);
+# Data output
 
 my $window=<<END;
-+--------------------------------------------------------+
-|T  Image Magick GUI                                     |
-+M-------------------------------------------------------+
-|+T--------------++I------------------------------------+|
-||#script;       ||ImageMagick.png                      ||
-||               ||                                     ||
-||               ||                                     ||
-||               ||                                     ||
-||               ||                                     ||
-||               ||                                     ||
-||               ||                                     ||
-||               ||                                     ||
-||               ||                                     ||
-||               ||                                     ||
-||               ||                                     ||
-||               ||                                     ||
-|+---------------++-------------------------------------+|
-+--------------------------------------------------------+
++---------------------------------------------------------+
+|T  PDL Playground                                        |
++M--------------------------------------------------------+
+|                     PDL Playground                      |
+|{Clear }{Load  }{Save  }{Next  }{Run   }{Help  }{Example}|
+|[                                               ]{Submit}|
+|   History                      Output                   |
+|+T---------------++T------------------------------------+|
+||#script;        ||#PDL output                          ||
+||                ||                                     ||
+||                ||                                     ||
+||                ||                                     ||
+||                ||                                     ||
+||                ||                                     ||
+||                ||                                     ||
+||                ||                                     ||
+||                ||                                     ||
+||                ||                                     ||
+|+----------------++-------------------------------------+|
++---------------------------------------------------------+
 
 Menu
 -File
@@ -48,148 +42,200 @@ Menu
 -Image
 --Load Image
 --Reload Image
---Run Script
 --Save Image
---Undo
+--Open With... 
+--Notes
 --Batch Process
-$menuString
+-Data
+--Load Data
+--Reload Data
+--Save Data
+--Notes
 END
 
 
-my $inFile;
-my $workingFile;
-my $outFile;
-my $workingDir="tmp";
+#setup PDL data store
+my $ndArrays={};
+my $script;
+my $stack=[];
 
-unless (-e $workingDir and -d $workingDir){mkdir $workingDir};
+#
 
 
-my $backend=$ARGV[0]?$ARGV[0]:"test";
-my $assist=$ARGV[1]?$ARGV[1]:"q";
-my $gui=GUIDeFATE->new($window,$backend,$assist);
+my $assist=$ARGV[1]?$ARGV[1]:"a";
+my $gui=GUIDeFATE->new($window,"gtk",$assist);
 my $frame=$gui->getFrame||$gui;
+my $nums = pdl [2, 4, 7];
+$frame->setValue("TextCtrl13",'');
+$frame->setValue("TextCtrl15",'');
+
 $gui->MainLoop;
 
 
-sub menu6 { #called using Menu with label New
-	if($frame->showDialog("Sure?","This will wipe existing script...proceed?","OKC","!")){
-	   $frame->setValue("TextCtrl1","");
-   }
+sub parseInput{
+#	my $x=eval{$frame->{textctrl8}};
+    my $inStr=$frame->getValue("textctrl9");
+	$frame->appendValue("TextCtrl13","\n".$frame->getValue("textctrl9"));
+    $inStr=trim($inStr);
+    print $inStr,"\n";;
+    if ($inStr=~/^\$([a-z][a-zA-Z0-9_]?)\s?=(.*)$/){
+		$ndArrays->{$1}=evaluate($2);
+		print "\n# Variable \$".$1." has been set to $ndArrays->{$1}";	 
+	}
+    elsif ($inStr=~/^print\s+\$([a-z][a-zA-Z0-9_]?)$/){	 
+	    $frame->appendValue("TextCtrl15",	
+		"\n\$".$1. " is ".$ndArrays->{$1});
+	}
+    elsif ($inStr=~/\$([a-z][a-zA-Z0-9_]?)/){
+		while  ($inStr=~/\$([a-z][a-zA-Z0-9_]?)/){
+			$inStr=~s/\$([a-z][a-zA-Z0-9_]?)/#ndArrays->{$1}/;
+		};
+		$inStr=~s/#/\$/g;
+		print $inStr,"\n";
+		eval "$inStr";
+	}
+	else{
+		my $outStr=eval($inStr);	 
+		$frame->appendValue("TextCtrl15","\n$outStr");	 
+		
+	}
+    $frame->setValue("textctrl9","");
+	
+};
+
+sub evaluate{
+	my $in=shift;
+	while  ($in=~/\$([a-z][a-zA-Z0-9_]?)/){
+		$in=~s/\$([a-z][a-zA-Z0-9_]?)/#ndArrays->{$1}/;
+	};
+	$in=~s/#/\$/g;
+	return eval "$in"
+	
+}
+
+sub trim{
+	my $in=shift;
+	$in=~s/^\s+|\s+$//g;
+	return $in;
+}
+
+#Static text 'PDL Playground'  with id stattext0
+sub btn1 {#called using button with label Clear 
+  # subroutione code goes here
+    $frame->setValue("textctrl9","");
+    $frame->setValue("TextCtrl13","");
+    $frame->setValue("TextCtrl15","");
+    
    };
 
-sub menu7 {#called using Menu with label Open
-	if($frame->showDialog("Sure?","This will wipe existing script...proceed?","OKC","!")){
-	  $frame->setValue("TextCtrl1","");
-	  my $file= $frame->showFileSelectorDialog("Open file",1);
-	    if (open(my $fh, '<:encoding(UTF-8)', $file)) {
-          while (my $row = <$fh>) {
-             $frame->appendValue("TextCtrl1",$row)
-          }
-       close $fh;
-      }
-  }
+sub btn2 {#called using button with label Load 
+  # subroutione code goes here
    };
 
-#Menu Save found, calls function &menu8 
-sub menu8 {#called using Menu with label Save
-	my $file= $gui->getFrame()->showFileSelectorDialog("Save file",0);
-	if (open(my $fh, '>', $file)) {
-       print $fh  $frame->getValue("TextCtrl1");
-       close $fh
-       }
+sub btn3 {#called using button with label Save 
+  # subroutione code goes here
    };
 
-#Menu Quit found, calls function &menu9 
-sub menu9 {#called using Menu with label Quit
-	$frame->quit();
+sub btn4 {#called using button with label List 
+  # subroutione code goes here
+   };
+
+sub btn5 {#called using button with label Run 
+  # subroutione code goes here
+   };
+
+sub btn6 {#called using button with label Help 
+  # subroutione code goes here
+   };
+
+sub btn7 {#called using button with label Example 
+  # subroutione code goes here
+   };
+
+sub btn8 {#called using button with label Submit 
+ parseInput();
+   };
+
+sub textctrl9 {#called using Text Control with default text '                                                 '
+  # subroutione code goes here
+   };
+
+#Static text 'History'  with id stattext10
+#Static text 'Output'  with id stattext11
+#SubPanel 'T' Id 13 found position  1 height 14 width 16 at row 5 with content #script; 
+#SubPanel 'T' Id 15 found position  19 height 14 width 37 at row 5 with content #PDL output 
+#Menu found
+#Menuhead File found
+#Menu New Script found, calls function &menu18 
+sub menu18 {#called using Menu with label New Script
+  # subroutione code goes here
+   };
+
+#Menu Open Script found, calls function &menu19 
+sub menu19 {#called using Menu with label Open Script
+  # subroutione code goes here
+   };
+
+#Menu Save Script found, calls function &menu20 
+sub menu20 {#called using Menu with label Save Script
+  # subroutione code goes here
+   };
+
+#Menu Quit found, calls function &menu21 
+sub menu21 {#called using Menu with label Quit
+  # subroutione code goes here
    };
 
 #Menuhead Image found
-#Menu Load found, calls function &menu12 
-sub menu12 {#called using Menu with label Load Image
-  	if($frame->showDialog("Sure?","This will wipe existing image...proceed?","OKC","!")){
-	  $inFile= $frame->showFileSelectorDialog("Open file",1);
-	  if ($inFile) {loadImage($inFile) };
-    }
+#Menu Load Image found, calls function &menu24 
+sub menu24 {#called using Menu with label Load Image
+  # subroutione code goes here
    };
 
-
-sub menu13 {#called using Menu with label Reload Image
-  	if($frame->showDialog("Sure?","This will wipe existing image...proceed?","OKC","!")){
-	  if ($inFile) {loadImage($inFile) };
-	}
-};
-
-sub menu14 {#called using Menu with label Run Script
-     my $p = new Image::Magick;
-     $p->Read($workingFile);
-     my @script=split (";",$frame->getValue("TextCtrl1"));
-     foreach my $line (@script){
-		 $line=~s/\n//;
-		 $line="\$p->".$line;
-		 eval $line;
-		 print $!;
-	 }
-	 copy($workingFile,$workingFile.".bak") ;
-	 $p->Write($workingFile);
-	 $frame->setImage("Image2",$workingFile);
-
+#Menu Reload Image found, calls function &menu25 
+sub menu25 {#called using Menu with label Reload Image
+  # subroutione code goes here
    };
 
-sub menu15 {#called using Menu with label Undo
-	if (-e $workingDir."/".$inFile.".bak")
-		{copy($workingFile.".bak",$workingFile)};
-	loadImage($workingFile);
-	
-	
-};
-
-
-sub menu16 {
-	  $outFile= $frame->showFileSelectorDialog("Save file",0);
-	  if ($outFile) {
-		  copy($workingFile,$outFile)  or die "could not copy file $workingFile into $outFile $!";
-	  }
-
+#Menu Run Script found, calls function &menu26 
+sub menu26 {#called using Menu with label Run Script
+  # subroutione code goes here
    };
 
+#Menu Save Image found, calls function &menu27 
+sub menu27 {#called using Menu with label Save Image
+  # subroutione code goes here
+   };
 
-sub loadImage{
-	my $fileToLoad=shift;
-	$workingFile= $fileToLoad; 
-	$workingFile=$workingDir."/".(split(/[\/\\]/,$workingFile))[-1];
-	if (-e $workingFile) {   copy($workingFile,$workingFile.".bak")  };
-	copy($fileToLoad,$workingFile)  or die "could not copy file $fileToLoad into $workingFile $!";
-	$frame->setImage("Image2",$workingFile);
-}
+#Menu Undo found, calls function &menu28 
+sub menu28 {#called using Menu with label Undo
+  # subroutione code goes here
+   };
 
-sub makeGFMenu{
-	my %IMMenu; my $type; my $menuString;my $commandsList; my $index=shift;
-	foreach  my $function (keys %IMCommands){
-		$type= ($IMCommands{$function}{Type} eq "")?"Misc":$IMCommands{$function}{Type};
-		if (!exists $IMMenu{$type}){ $IMMenu{$type}=[];};
-		push (@{$IMMenu{$type}}, $function);
-	}
-	foreach  my $menuHead (sort(keys %IMMenu)){
-		$menuString.="-$menuHead\n";
-		$index+=2;
-		foreach my $menuItem (sort(@{$IMMenu{$menuHead}})){
-			$index++;
-			$menuString.="--$menuItem\n";
-			eval "sub menu$index {makePopUp($menuItem)};";
-		}
-	} 
-	return $menuString;	
-}
+#Menu Batch Process found, calls function &menu29 
+sub menu29 {#called using Menu with label Batch Process
+  # subroutione code goes here
+   };
 
-sub makePopUp{
+#Menuhead Data found
+#Menu Load Data found, calls function &menu32 
+sub menu32 {#called using Menu with label Load Data
+  # subroutione code goes here
+   };
 
-	my $command=shift;
-	if ($frame->showDialog($command,$IMCommands{$command}{Description}, "OKC" , "I") ){
-		my $params=$IMCommands{$command}{Parameters};
-		$params=~s/(([a-z]+=>[^{,]+,)|([a-z]+=>\{[^\}]+}),)/ $1\n/g;  
-		$frame->appendValue("TextCtrl1","\n$command(\n$params\n);\n");
-	}
-	
-}
+#Menu Reload Data found, calls function &menu33 
+sub menu33 {#called using Menu with label Reload Data
+  # subroutione code goes here
+   };
+
+#Menu Run Script found, calls function &menu34 
+sub menu34 {#called using Menu with label Run Script
+  # subroutione code goes here
+   };
+
+#Menu Save Data found, calls function &menu35 
+sub menu35 {#called using Menu with label Save Data
+  # subroutione code goes here
+   };
+
 
