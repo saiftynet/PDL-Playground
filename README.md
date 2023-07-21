@@ -40,8 +40,8 @@ output the data, produce a chart etc.
 
 Commands are entered in the "input" (8) box. They are processed and copied into the "history" box (10), allowing you the build up a list of instructions passed for future modification, and conversion to scripts.  the results of any outputs (e.g. print statements) are displayed in the multi-purpose output box (11).
 
-The Multipurpose OutPut box is also where help messages and example scripts may appear. 
+The Multipurpose Output box is also where help messages and example scripts may appear. 
 
-Help (6) activates the Help Option and displays a help window; either a genric help message, or if there is content in the Input box (8) and context sensitive help is provided. A similar scenrio is presented if the Examples (7) button is clicked.
+Help (6) activates the Help Option and displays a help window; either a generic help message, or if there is content in the Input box (8) and context sensitive help is provided. A similar scenrio is presented if the Examples (7) button is clicked.
 
 Gnuplot outputs appear in a Gnuplot window, when invoked with commands like `imag` and `points`, `line` etc.
