@@ -58,17 +58,62 @@ END
 my $ndArrays={};
 my $script;
 my $stack=[];
-my %help;
+my %help=(
+   Help=><<EOH,
+# Section:"Help", Category:"Help"
+# Keywords: Help, UI, Help formatting 
+#
+#  The User Interface has the following elements 
+# {Clear(1)}{Load(2)}{Save(3)}{Next(4)}{Run(5)}{Help(6)}{Example(7)}
+# [ Entry Box (8)  ]  {Submit(9)}
+# Script/History (10)  Multimodal interactivity box (11)
+#
+#
+# To Start using this tool try Entering a command in the entry box (8) above
+# The Command is executed and copied into the history window (10) 
+# Typical commands may viewed by clicking the Example(7)  Button.
+# To get Help on a specific topic, enter text above and then click the help(6) button
+# To get this Message Back, click on Help{6} with an empty entry box
+# You can add to the Help sections
+# Edit this Box, Changing the Section, Category and Keywords, and the content
+# This must be saved (3) for the help to persist.
+EOH
+  
+
+);
+
+my %examples=(
+   Example=><<EOH,
+# Section:"Example", in Category:"Example"
+# Keywords: Help, UI, Help formatting 
+#
+# Examples
+# Examples will have a description and a script that could be be cut and pasted
+# into the Script/Input text box.  
+#
+# \$x2 = rvals (15,15)
+# \$y  = sequence(50)
+# \$x  = \$y*\$y - 15*\$y +16
+# points \$x, \$y
+# 
+# You can edit and save this example to add more examples.  If you don't 2
+EOH
+
+);
+
+
 my %views=(
     Output=>"",
+    Input=>"",
     Stack =>"",
     Variables =>"",
     Subroutines=>"",
+    Logs=>"",
+    Errors=>"",
 );
-my %examples;
-my $mode;
-#
-
+my $viewIndex=0;
+my $viewList=[qw/Output Input Stack  Variables  Subroutines Errors/];
+my $view=$viewList->[$viewIndex];
 
 my $assist=$ARGV[1]?$ARGV[1]:"a";
 my $gui=GUIDeFATE->new($window,"gtk",$assist);
@@ -81,26 +126,25 @@ $gui->MainLoop;
 
 
 sub parseInput{
-#	my $x=eval{$frame->{textctrl8}};
-    my $inStr=$frame->getValue("textctrl9");
-	$frame->appendValue("TextCtrl13","\n".$frame->getValue("textctrl9"));
+	my ($inStr,$source)=@_;
+   	$frame->appendValue("TextCtrl13","\n".$frame->getValue("textctrl9"));
     $inStr=trim($inStr);
     print $inStr,"\n";
     if ($inStr=~/^#/){
 		# comment line...do nothing
 	}
-    elsif ($inStr=~/^\$([a-z][a-zA-Z0-9_]?)\s?=(.*)$/){
+    elsif ($inStr=~/^\$([a-z][a-zA-Z0-9_]*)\s?=(.*)$/){
 		$ndArrays->{$1}=evaluate($2);
 		print "\n# Variable \$".$1." has been set to $ndArrays->{$1}\n";	 
 	}
-    elsif ($inStr=~/^print\s+\$([a-z][a-zA-Z0-9_]?)$/){	 
+    elsif ($inStr=~/^print\s+\$([a-z][a-zA-Z0-9_]*)$/){	 
 	    setView("append","Output","\n\$".$1. " is ".$ndArrays->{$1});
 	}
     elsif ($inStr=~/^print\s+/){	 
 		$inStr=~s/print\s?//;
 	    setView("append","Output","\n$inStr   is ".evaluate($inStr));
 	}
-    elsif ($inStr=~/\$([a-z][a-zA-Z0-9_]?)/){
+    elsif ($inStr=~/\$([a-z][a-zA-Z0-9_]*)/){
 		evaluate($inStr);
 		print $inStr,"\n";
 	}
@@ -115,7 +159,7 @@ sub parseInput{
 
 sub evaluate{
 	my $in=shift;
-	while  ($in=~/\$([a-z][a-zA-Z0-9_]?)/){
+	while  ($in=~/\$([a-z][a-zA-Z0-9_]*)/){
 		$in=~s/\$([a-z][a-zA-Z0-9_]?)/#ndArrays->{$1}/;
 	};
 	$in=~s/#/\$/g;
@@ -132,7 +176,10 @@ sub trim{
 
 # multipurpose load to load data, help file, scripts,examples
 sub load{
-	my $dataType=shift;
+	my ($dataType,$file,$params)=@_;
+	if ($dataType eq "support"){
+		
+	}
 }
 
 # the multipurpose output box displays many outputs
@@ -165,10 +212,10 @@ sub showView{
 }
 
 sub help{  # obtained by trihggering "Help"
-	my $subject=$frame->getValue("textctrl9")//"Help Index";
+	my $subject=$frame->getValue("textctrl9")||"Help";
 	$frame->setLabel("stattext11","Help");
-	my $helpMessage="No Help Found";
-    if (exists $help{subject}){
+	my $helpMessage="No Help Found for $subject";
+    if (exists $help{$subject}){
 		$helpMessage=$help{$subject}
 	}
 	else{
@@ -179,14 +226,14 @@ sub help{  # obtained by trihggering "Help"
 }
 
 sub example{  # obtained by trihggering "Help"
-	my $subject=$frame->getValue("textctrl9")//"Example Index";
+	my $subject=$frame->getValue("textctrl9")||"Example";
 	$frame->setLabel("stattext11","Example");
 	my $egText="No Example Found";
-    if (exists $examples{subject}){
-		$egText=$help{$subject}
+    if (exists $examples{$subject}){
+		$egText=$examples{$subject}
 	}
 	else{
-		 #searchHelp routine
+		 #searchExample routine
 	}
 	$frame->setValue("TextCtrl15",$egText)
 	
@@ -227,7 +274,7 @@ sub btn7 {#called using button with label Example
    };
 
 sub btn8 {#called using button with label Submit 
- parseInput();
+ parseInput( $frame->getValue("textctrl9"));
    };
 
 sub textctrl9 {#called using Text Control with default text '                                                 '
