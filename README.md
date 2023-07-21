@@ -33,10 +33,15 @@ The variable name $x is extracted and replaced with $ndArrays{x};
 `parseInput()` parses the inputs identifying whether the user wants to create a ndarray, perform an operation,
 output the data, produce a chart etc. 
 
-### UI
+### Proposed UI
 
-Commands are entered in the "input" box. They are processed and copied into the "history" box, allowing you the build up a list of instructions passed for future modification, and conversion to scripts.  the results of any putputs (e.g. print statements) are displayed in the multi-purpose output box.
+![image](https://github.com/saiftynet/PDL-Playground/assets/34284663/6fff4fbe-6df1-4908-87fb-a70b49abd227)
 
-The Multipurpose OutPut box is also where help messagesn and example scripts may appear. 
 
-Gnuplot outputs appear in a Gnuplot window, when invoked with commands like `imag` and `points`
+Commands are entered in the "input" (8) box. They are processed and copied into the "history" box (10), allowing you the build up a list of instructions passed for future modification, and conversion to scripts.  the results of any outputs (e.g. print statements) are displayed in the multi-purpose output box (11).
+
+The Multipurpose OutPut box is also where help messages and example scripts may appear. 
+
+Help (6) activates the Help Option and displays a help window; either a genric help message, or if there is content in the Input box (8) and context sensitive help is provided. A similar scenrio is presented if the Examples (7) button is clicked.
+
+Gnuplot outputs appear in a Gnuplot window, when invoked with commands like `imag` and `points`, `line` etc.
