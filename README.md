@@ -38,9 +38,11 @@ output the data, produce a chart etc.
 ![image](https://github.com/saiftynet/PDL-Playground/assets/34284663/6fff4fbe-6df1-4908-87fb-a70b49abd227)
 
 
+#### Input
 Commands are entered in the "input" (8) box. They are processed and copied into the "history" box (10), allowing you the build up a list of instructions passed for future modification, and conversion to scripts.  the results of any outputs (e.g. print statements) are displayed in the multi-purpose output box (11).
 
-The Multipurpose Output box is also where help messages and example scripts may appear. 
+### Outputs
+The Multipurpose Output box is also where help messages and example scripts may appear. Clicking Next (4) cycles through the _Outputs_, the _Stack_ the list of _Variables_
 
 Help (6) activates the Help Option and displays a help window; either a generic help message, or if there is content in the Input box (8) and context sensitive help is provided. A similar scenrio is presented if the Examples (7) button is clicked.
 
